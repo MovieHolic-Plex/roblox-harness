@@ -75,15 +75,16 @@ buildNode = function(ctx: Ctx, n: any, parent: Instance, base: CFrame, idx: numb
 			local h = n.trim * 0.2
 			local y = size.Y / 2 + h / 2
 			local trimSpec = { color = n.trimColor or n.color, material = n.material, anchored = n.anchored, canCollide = false }
-			local strips = {
-				{ "N", Vector3.new(size.X, h, w), Vector3.new(0, y, -size.Z / 2 + w / 2) },
-				{ "S", Vector3.new(size.X, h, w), Vector3.new(0, y, size.Z / 2 - w / 2) },
-				{ "W", Vector3.new(w, h, size.Z - 2 * w), Vector3.new(-size.X / 2 + w / 2, y, 0) },
-				{ "E", Vector3.new(w, h, size.Z - 2 * w), Vector3.new(size.X / 2 - w / 2, y, 0) },
+			type Strip = { side: string, size: Vector3, at: Vector3 }
+			local strips: { Strip } = {
+				{ side = "N", size = Vector3.new(size.X, h, w), at = Vector3.new(0, y, -size.Z / 2 + w / 2) },
+				{ side = "S", size = Vector3.new(size.X, h, w), at = Vector3.new(0, y, size.Z / 2 - w / 2) },
+				{ side = "W", size = Vector3.new(w, h, size.Z - 2 * w), at = Vector3.new(-size.X / 2 + w / 2, y, 0) },
+				{ side = "E", size = Vector3.new(w, h, size.Z - 2 * w), at = Vector3.new(size.X / 2 - w / 2, y, 0) },
 			}
 			for _, st in ipairs(strips) do
-				local t = newPart("Part", p.Name .. "_Trim" .. st[1], st[2], parent, ctx)
-				applyCommon(t, trimSpec, ctx, cf * CFrame.new(st[3]))
+				local t = newPart("Part", p.Name .. "_Trim" .. st.side, st.size, parent, ctx)
+				applyCommon(t, trimSpec, ctx, cf * CFrame.new(st.at))
 				if n.trimColor == nil then
 					local c = p.Color
 					t.Color = Color3.new(c.R * 0.7, c.G * 0.7, c.B * 0.7)
