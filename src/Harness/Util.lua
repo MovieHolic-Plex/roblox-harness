@@ -3,6 +3,9 @@
 -- Works in Roblox (Studio/runtime) and in Lune (via the @lune/roblox globals).
 local Util = {}
 
+-- Roblox clamps BasePart sizes to 2048 studs per axis.
+Util.MAX_PART_SIZE = 2048
+
 export type Errors = { string }
 
 local HEX = "^#?(%x%x)(%x%x)(%x%x)$"
@@ -25,7 +28,7 @@ function Util.err(errs: Errors, path: string, msg: string)
 end
 
 -- Validate a 3-vector given as {x,y,z}. Returns true when valid.
-function Util.checkVec3(errs: Errors, path: string, v: any, opts: { positive: boolean?, nonneg: boolean? }?): boolean
+function Util.checkVec3(errs: Errors, path: string, v: any, opts: { positive: boolean?, nonneg: boolean?, max: number? }?): boolean
 	if type(v) ~= "table" or #v ~= 3 then
 		Util.err(errs, path, "expected {x, y, z}, got " .. typeof(v))
 		return false
@@ -37,6 +40,10 @@ function Util.checkVec3(errs: Errors, path: string, v: any, opts: { positive: bo
 		end
 		if opts and opts.positive and v[i] <= 0 then
 			Util.err(errs, path, ("component %d must be > 0"):format(i))
+			return false
+		end
+		if opts and opts.max and v[i] > opts.max then
+			Util.err(errs, path, ("component %d exceeds %g (Roblox part size limit)"):format(i, opts.max))
 			return false
 		end
 		if opts and opts.nonneg and v[i] < 0 then

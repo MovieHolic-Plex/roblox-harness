@@ -98,6 +98,8 @@ function Rig.build(name: string, scale: number, origin: CFrame?): (Model, { [str
 	local h = Instance.new("Humanoid")
 	h.RigType = Enum.HumanoidRigType.R15
 	h.HipHeight = 2 * scale
+	-- no floating name/health tag over generated rigs (games opt back in)
+	h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	h.Parent = m
 	m.PrimaryPart = parts.HumanoidRootPart
 	m.WorldPivot = parts.HumanoidRootPart.CFrame

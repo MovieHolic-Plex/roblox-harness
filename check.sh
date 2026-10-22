@@ -14,5 +14,6 @@ if [ ! -f "$DEFS" ]; then curl -fsSL -o "$DEFS" https://raw.githubusercontent.co
 out=$("$(bin luau-lsp)" analyze --sourcemap=sourcemap.json --definitions="$DEFS" src examples 2>&1 || true)
 if echo "$out" | grep -q "Error"; then echo "$out" | grep "Error"; exit 1; fi
 echo "== lune tests"; "$(bin lune)" run tests/run.luau
+echo "== fuzz";       "$(bin lune)" run tests/fuzz.luau 3000
 echo "== export examples"; "$(bin lune)" run tools/export_examples.luau
 echo "ALL CHECKS PASSED"

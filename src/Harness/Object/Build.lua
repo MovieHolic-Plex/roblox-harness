@@ -69,12 +69,25 @@ buildNode = function(ctx: Ctx, n: any, parent: Instance, base: CFrame, idx: numb
 		end
 		decorate(p, n)
 		if kind == "platform" and n.trim and n.trim > 0 then
-			-- thin darker lip on top so ledges read clearly from below/afar
-			local t = newPart("Part", p.Name .. "_Trim", Vector3.new(size.X + n.trim * 0.2, n.trim * 0.2, size.Z + n.trim * 0.2), parent, ctx)
-			applyCommon(t, { color = n.trimColor or n.color, material = n.material, anchored = n.anchored, canCollide = false }, ctx, cf * CFrame.new(0, size.Y / 2 - n.trim * 0.1 + 0.01, 0))
-			if n.trimColor == nil then
-				local c = p.Color
-				t.Color = Color3.new(c.R * 0.7, c.G * 0.7, c.B * 0.7)
+			-- Raised border frame (4 strips) around the top edge so ledges read clearly from afar
+			-- while the walkable top keeps its own colour.
+			local w = n.trim * 0.25
+			local h = n.trim * 0.2
+			local y = size.Y / 2 + h / 2
+			local trimSpec = { color = n.trimColor or n.color, material = n.material, anchored = n.anchored, canCollide = false }
+			local strips = {
+				{ "N", Vector3.new(size.X, h, w), Vector3.new(0, y, -size.Z / 2 + w / 2) },
+				{ "S", Vector3.new(size.X, h, w), Vector3.new(0, y, size.Z / 2 - w / 2) },
+				{ "W", Vector3.new(w, h, size.Z - 2 * w), Vector3.new(-size.X / 2 + w / 2, y, 0) },
+				{ "E", Vector3.new(w, h, size.Z - 2 * w), Vector3.new(size.X / 2 - w / 2, y, 0) },
+			}
+			for _, st in ipairs(strips) do
+				local t = newPart("Part", p.Name .. "_Trim" .. st[1], st[2], parent, ctx)
+				applyCommon(t, trimSpec, ctx, cf * CFrame.new(st[3]))
+				if n.trimColor == nil then
+					local c = p.Color
+					t.Color = Color3.new(c.R * 0.7, c.G * 0.7, c.B * 0.7)
+				end
 			end
 		end
 	elseif kind == "truss" then

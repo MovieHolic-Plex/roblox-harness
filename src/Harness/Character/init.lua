@@ -31,7 +31,7 @@ local function checkPiece(errs: Util.Errors, path: string, p: any)
 	if not Rig.isBodyPart(p.attach) then
 		Util.err(errs, path .. ".attach", ("unknown body part %q"):format(tostring(p.attach)))
 	end
-	Util.checkVec3(errs, path .. ".size", p.size, { positive = true })
+	Util.checkVec3(errs, path .. ".size", p.size, { positive = true, max = 64 })
 	if p.pos ~= nil then Util.checkVec3(errs, path .. ".pos", p.pos) end
 	if p.rot ~= nil then Util.checkVec3(errs, path .. ".rot", p.rot) end
 	if p.color == nil then Util.err(errs, path .. ".color", "is required") else Util.checkColor(errs, path .. ".color", p.color) end

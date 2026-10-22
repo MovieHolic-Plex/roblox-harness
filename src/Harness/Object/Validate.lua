@@ -64,6 +64,10 @@ local function posNum(ctx: Ctx, path: string, v: any, name: string, required: bo
 		Util.err(ctx.errs, path, name .. " must be a finite number > 0")
 		return false
 	end
+	if v > Util.MAX_PART_SIZE then
+		Util.err(ctx.errs, path, ("%s %g exceeds %d (Roblox part size limit)"):format(name, v, Util.MAX_PART_SIZE))
+		return false
+	end
 	return true
 end
 
@@ -161,7 +165,7 @@ nodeCheck = function(ctx: Ctx, path: string, n: any, depth: number): number
 		if n.size == nil then
 			if kind ~= "part" then Util.err(e, path .. ".size", "is required") end
 		else
-			Util.checkVec3(e, path .. ".size", n.size, { positive = true })
+			Util.checkVec3(e, path .. ".size", n.size, { positive = true, max = Util.MAX_PART_SIZE })
 		end
 		if n.shape ~= nil and not SHAPES[n.shape] then
 			Util.err(e, path .. ".shape", "must be Block, Cylinder or Ball")
@@ -170,7 +174,7 @@ nodeCheck = function(ctx: Ctx, path: string, n: any, depth: number): number
 			if n.trim ~= nil and (not Util.isFiniteNumber(n.trim) or n.trim < 0 or n.trim > 5) then
 				Util.err(e, path .. ".trim", "must be a number in 0..5")
 			elseif n.trim and n.trim > 0 then
-				produced = 2
+				produced = 5
 			end
 			if n.trimColor ~= nil then Util.checkColor(e, path .. ".trimColor", n.trimColor) end
 		end

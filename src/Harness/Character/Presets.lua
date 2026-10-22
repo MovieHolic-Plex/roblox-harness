@@ -14,6 +14,31 @@ local function P(attach: string, name: string, size: { number }, pos: { number }
 end
 Presets.P = P
 
+-- Convert a CFrame (body-part space) into the pos/rot fields pieces use.
+local function fromCF(cf: CFrame): ({ number }, { number })
+	local rx, ry, rz = cf:ToOrientation()
+	local p = cf.Position
+	return { p.X, p.Y, p.Z }, { math.deg(rx), math.deg(ry), math.deg(rz) }
+end
+Presets.fromCF = fromCF
+
+-- Piece whose local +Y axis points along `dir`, centred `dist` along it from `origin`.
+local function along(attach: string, name: string, size: { number }, origin: Vector3, dir: Vector3, dist: number, color: any, extra: { [string]: any }?): Piece
+	local d = dir.Unit
+	local up = Vector3.new(0, 1, 0)
+	local axis = up:Cross(d)
+	local cf
+	if axis.Magnitude < 1e-6 then
+		cf = CFrame.new(origin + d * dist)
+	else
+		cf = CFrame.new(origin + d * dist) * CFrame.fromAxisAngle(axis.Unit, math.acos(math.clamp(up:Dot(d), -1, 1)))
+	end
+	local pos, rot = fromCF(cf)
+	local t = P(attach, name, size, pos, color, extra)
+	t.rot = rot
+	return t
+end
+
 local HF = -0.6 -- head front plane
 
 -- FACE --------------------------------------------------------------------------------
@@ -100,18 +125,23 @@ function Presets.hair(o: any): { Piece }
 			table.insert(out, P("Head", "Fringe" .. (i + 3), { 0.26, 0.22, 0.12 }, { i * 0.24, 0.45, -0.62 }, col, { rot = { 0, 0, i * 4 } }))
 		end
 	elseif style == "spiky" then
+		-- Two rows of spikes radiating out of the crown: the silhouette must read from any angle.
 		local n = o.spikes or 7
-		for i = 1, n do
-			local a = (i - 1) / math.max(1, n - 1) - 0.5 -- -0.5..0.5
-			local h = (o.height or 1) * (0.55 + 0.25 * math.cos(a * math.pi))
-			table.insert(out, P("Head", ("Spike%02d"):format(i), { 0.32, h, 0.32 }, { a * 1.1, 0.7 + h / 2 - 0.1, 0.05 + math.abs(a) * 0.1 }, col, { rot = { -12, 45, a * 50 } }))
+		local hk = o.height or 1
+		local origin = Vector3.new(0, 0.15, 0.08)
+		for row, back in ipairs({ -0.15, 0.75 }) do
+			local count = row == 1 and n or math.max(3, n - 2)
+			for i = 1, count do
+				local a = count == 1 and 0 or ((i - 1) / (count - 1) - 0.5) -- -0.5..0.5 across the head
+				local side = a * 2.6
+				local dir = Vector3.new(math.sin(side), math.cos(side) + 0.25, back + (row == 2 and math.abs(a) * 0.4 or 0))
+				local len = hk * (row == 1 and (0.75 + 0.35 * math.cos(a * math.pi)) or 0.85)
+				table.insert(out, along("Head", ("Spike%d_%02d"):format(row, i), { 0.36, len, 0.36 }, origin, dir, 0.55 + len * 0.42, col))
+			end
 		end
 		for i = 1, 4 do
 			local x = (i - 2.5) * 0.3
-			table.insert(out, P("Head", ("Bang%02d"):format(i), { 0.24, 0.42, 0.12 }, { x, 0.42, -0.64 }, col, { rot = { -10, 0, (i % 2 == 0) and 12 or -12 } }))
-		end
-		for i = 1, 3 do
-			table.insert(out, P("Head", ("BackSpike%02d"):format(i), { 0.34, 0.5, 0.34 }, { (i - 2) * 0.42, 0.25, 0.68 }, col, { rot = { 35, 45, 0 } }))
+			table.insert(out, P("Head", ("Bang%02d"):format(i), { 0.24, 0.4, 0.12 }, { x, 0.42, -0.64 }, col, { rot = { -10, 0, (i % 2 == 0) and 14 or -14 } }))
 		end
 	elseif style == "long" then
 		table.insert(out, P("Head", "LongBack", { 1.32, 1.6, 0.3 }, { 0, -0.35, 0.58 }, col))
@@ -139,9 +169,10 @@ function Presets.accessory(o: any): { Piece }
 	local c = o.color
 	if t == "strawHat" then
 		return {
-			P("Head", "HatBrim", { 0.08, 2.3, 2.3 }, { 0, 0.62, 0 }, c or { 225, 190, 110 }, { shape = "Cylinder", rot = { 0, 0, 90 }, material = "Fabric" }),
-			P("Head", "HatCrown", { 0.6, 1.3, 1.3 }, { 0, 0.92, 0 }, c or { 225, 190, 110 }, { shape = "Cylinder", rot = { 0, 0, 90 }, material = "Fabric" }),
-			P("Head", "HatBand", { 0.18, 1.33, 1.33 }, { 0, 0.72, 0 }, o.bandColor or { 190, 30, 30 }, { shape = "Cylinder", rot = { 0, 0, 90 } }),
+			P("Head", "HatBrim", { 0.07, 2.5, 2.5 }, { 0, 0.66, 0.02 }, c or { 240, 205, 120 }, { shape = "Cylinder", rot = { 0, 0, 90 }, material = "SmoothPlastic" }),
+			P("Head", "HatCrown", { 0.42, 1.36, 1.36 }, { 0, 0.88, 0.02 }, c or { 240, 205, 120 }, { shape = "Cylinder", rot = { 0, 0, 90 }, material = "SmoothPlastic" }),
+			P("Head", "HatTop", { 0.12, 1.2, 1.2 }, { 0, 1.1, 0.02 }, c or { 240, 205, 120 }, { shape = "Cylinder", rot = { 0, 0, 90 }, material = "SmoothPlastic" }),
+			P("Head", "HatBand", { 0.14, 1.39, 1.39 }, { 0, 0.76, 0.02 }, o.bandColor or { 200, 30, 30 }, { shape = "Cylinder", rot = { 0, 0, 90 } }),
 		}
 	elseif t == "headband" then
 		local out = {
@@ -161,11 +192,12 @@ function Presets.accessory(o: any): { Piece }
 	elseif t == "cape" then
 		return {
 			P("UpperTorso", "CapeClasp", { 2.1, 0.22, 0.25 }, { 0, 0.7, 0.45 }, o.claspColor or { 230, 180, 60 }, { material = "Metal" }),
-			P("UpperTorso", "Cape", { 2.1, 3.0, 0.08 }, { 0, -0.75, 0.62 }, c or { 220, 220, 225 }, { material = "Fabric", rot = { -6, 0, 0 } }),
+			P("UpperTorso", "Cape", { 2.1, 3.1, 0.08 }, { 0, -0.8, 0.66 }, c or { 235, 235, 238 }, { material = "SmoothPlastic", rot = { -7, 0, 0 } }),
+			P("UpperTorso", "CapeHem", { 2.14, 0.12, 0.1 }, { 0, -2.33, 0.86 }, o.hemColor or c or { 235, 235, 238 }, { material = "SmoothPlastic", rot = { -7, 0, 0 } }),
 		}
 	elseif t == "belt" then
 		return {
-			P("LowerTorso", "Belt", { 2.06, 0.3, 1.06 }, { 0, 0.05, 0 }, c or { 60, 40, 30 }, { material = "Fabric" }),
+			P("LowerTorso", "Belt", { 2.06, 0.3, 1.06 }, { 0, 0.05, 0 }, c or { 60, 40, 30 }, { material = "SmoothPlastic" }),
 			P("LowerTorso", "Buckle", { 0.36, 0.26, 0.06 }, { 0, 0.05, -0.55 }, o.buckleColor or { 230, 180, 60 }, { material = "Metal" }),
 		}
 	elseif t == "shoulderPads" then
@@ -197,11 +229,21 @@ function Presets.weapon(o: any): { Piece }
 	local t = o.type
 	local c = o.color
 	if t == "katana" then
+		-- Held in the fist, blade raised forward/up 50 degrees (reads as a sword, not a stick).
 		local len = o.length or 3.2
+		local g = CFrame.new(0, -0.05, 0) * CFrame.Angles(math.rad(o.angle or 50), 0, 0)
+		local function at(name: string, size: { number }, z: number, color: any, extra: { [string]: any }?): Piece
+			local pos, rot = fromCF(g * CFrame.new(0, 0, z))
+			local q = P(hand, name, size, pos, color, extra)
+			q.rot = rot
+			return q
+		end
 		return {
-			P(hand, "Grip", { 0.18, 0.18, 0.9 }, { 0, -0.1, 0 }, o.gripColor or { 30, 30, 35 }, { material = "Fabric" }),
-			P(hand, "Guard", { 0.42, 0.42, 0.06 }, { 0, -0.1, -0.48 }, o.guardColor or { 200, 165, 70 }, { material = "Metal", shape = "Cylinder", rot = { 0, 90, 0 } }),
-			P(hand, "Blade", { 0.06, 0.16, len }, { 0, -0.1, -0.5 - len / 2 }, c or { 220, 225, 235 }, { material = "Metal", reflectance = 0.3 }),
+			at("Grip", { 0.18, 0.18, 0.9 }, 0.1, o.gripColor or { 30, 30, 35 }, { material = "Fabric" }),
+			at("Pommel", { 0.22, 0.22, 0.08 }, 0.57, o.guardColor or { 200, 165, 70 }, { material = "Metal" }),
+			at("Guard", { 0.5, 0.5, 0.07 }, -0.38, o.guardColor or { 200, 165, 70 }, { material = "Metal" }),
+			at("Blade", { 0.06, 0.18, len }, -0.42 - len / 2, c or { 225, 230, 240 }, { material = "Metal", reflectance = 0.25 }),
+			at("Edge", { 0.07, 0.04, len }, -0.42 - len / 2, { 250, 252, 255 }, { material = "Neon", transparency = 0.6 }),
 		}
 	elseif t == "staff" then
 		local len = o.length or 5
