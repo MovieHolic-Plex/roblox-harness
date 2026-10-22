@@ -1,0 +1,8 @@
+{
+  "name": "CheckpointPad",
+  "children": [
+    { "kind": "platform", "name": "Pad", "size": [10, 1, 10], "color": "#2f6fd6", "material": "SmoothPlastic", "trim": 1.5, "trimColor": "#f5f5f5", "attributes": { "Checkpoint": 2 } },
+    { "kind": "part", "name": "Beacon", "shape": "Cylinder", "size": [6, 0.6, 0.6], "pos": [0, 3.5, 0], "rot": [0, 0, 90], "color": "#7fd0ff", "material": "Neon", "canCollide": false },
+    { "kind": "part", "name": "Orb", "shape": "Ball", "size": [1.6, 1.6, 1.6], "pos": [0, 7.2, 0], "color": "#ffe066", "material": "Neon", "canCollide": false }
+  ]
+}

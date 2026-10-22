@@ -1,0 +1,6 @@
+# Toolchain (https://github.com/LPGhatguy/aftman) — CI uses the same versions.
+[tools]
+rojo = "rojo-rbx/rojo@7.4.4"
+selene = "Kampfkarren/selene@0.27.1"
+lune = "lune-org/lune@0.8.9"
+luau-lsp = "JohnnyMorganz/luau-lsp@1.70.1"

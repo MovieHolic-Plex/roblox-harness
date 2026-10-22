@@ -1,0 +1,7 @@
+out/
+*.rbxl
+*.rbxlx
+!docs/**
+sourcemap.json
+.tools/
+globalTypes.d.luau

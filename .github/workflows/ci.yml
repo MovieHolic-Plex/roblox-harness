@@ -1,0 +1,19 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ok-nick/setup-aftman@v0.4.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run all checks (selene, rojo, luau-lsp, lune tests, export)
+        run: ./check.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harness-builds
+          path: out/

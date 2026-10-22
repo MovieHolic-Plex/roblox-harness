@@ -1,0 +1,18 @@
+{
+  "name": "HarnessExamples",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Harness": { "$path": "src/Harness" },
+      "HarnessExamples": {
+        "$className": "Folder",
+        "objects": { "$path": "examples/objects" },
+        "characters": { "$path": "examples/characters" },
+        "anims": { "$path": "examples/anims" }
+      }
+    },
+    "ServerScriptService": {
+      "BuildExamples": { "$path": "examples/BuildExamples.server.lua" }
+    }
+  }
+}
